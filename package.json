@@ -1,0 +1,13 @@
+{
+  "name": "copilot-stdio-secret-repro",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Dependency-free MCP probe for Agents secret substitution in Cloud sandboxes.",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node --test"
+  }
+}
