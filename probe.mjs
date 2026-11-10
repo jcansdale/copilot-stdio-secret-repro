@@ -1,13 +1,8 @@
 import { randomUUID } from "node:crypto";
 import { createInterface } from "node:readline";
 
-const secretName = "COPILOT_MCP_DIAGNOSTIC_DUMMY_SECRET";
 const expected = "synthetic-stdio-secret-20261109";
-const references = {
-  actions: `\${{ secrets.${secretName} }}`,
-  dollar: `$${secretName}`,
-  braced: `\${${secretName}}`,
-};
+const reference = "${{ secrets.COPILOT_MCP_DIAGNOSTIC_DUMMY_SECRET }}";
 const tool = {
   name: "probe",
   description: "Report boolean-only dummy secret delivery checks; never return environment values.",
@@ -45,29 +40,19 @@ function handle(request) {
       ) {
         return { error: { code: -32602, message: "Expected probe with a nonce string (1-128 characters)." } };
       }
-      const checks = Object.fromEntries(
-        Object.entries(references).map(([syntax, reference]) => {
-          const value = process.env[`PROBE_${syntax.toUpperCase()}`];
-          return [
-            syntax,
-            {
-              present: value !== undefined,
-              matchesDummy: value === expected,
-              unexpandedReference: value === reference,
-            },
-          ];
-        }),
-      );
+      const value = process.env.PROBE_SECRET;
       return {
         result: {
           content: [{
             type: "text",
             text: JSON.stringify({
-              marker: "stdio-secret-probe-v1",
+              marker: "stdio-secret-probe-v2",
               nonce: args.nonce,
               invocationId: randomUUID(),
               literalControlMatches: process.env.PROBE_LITERAL === "literal-control",
-              checks,
+              present: value !== undefined,
+              matchesDummy: value === expected,
+              unexpandedReference: value === reference,
             }),
           }],
         },

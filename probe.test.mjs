@@ -3,11 +3,7 @@ import { spawnSync } from "node:child_process";
 import { test } from "node:test";
 
 const expected = "synthetic-stdio-secret-20261109";
-const references = {
-  actions: "${{ secrets.COPILOT_MCP_DIAGNOSTIC_DUMMY_SECRET }}",
-  dollar: "$COPILOT_MCP_DIAGNOSTIC_DUMMY_SECRET",
-  braced: "${COPILOT_MCP_DIAGNOSTIC_DUMMY_SECRET}",
-};
+const reference = "${{ secrets.COPILOT_MCP_DIAGNOSTIC_DUMMY_SECRET }}";
 
 function request(id, method, params) {
   return JSON.stringify({ jsonrpc: "2.0", id, method, params });
@@ -35,7 +31,7 @@ function probe(env) {
   ], env);
   assert.equal(result.stderr, "");
   const report = JSON.parse(result.messages[0].result.content[0].text);
-  assert.equal(report.marker, "stdio-secret-probe-v1");
+  assert.equal(report.marker, "stdio-secret-probe-v2");
   assert.equal(report.nonce, "local-test");
   assert.match(report.invocationId, /^[0-9a-f-]{36}$/);
   return { result, report };
@@ -60,24 +56,18 @@ test("MCP handshake, notification, ping and tool discovery", () => {
 for (const state of ["missing", "empty", "unexpanded", "unexpected", "resolved"]) {
   test(`distinguishes ${state} values without disclosing them`, () => {
     const env = { PROBE_LITERAL: "literal-control" };
-    for (const [syntax, reference] of Object.entries(references)) {
-      if (state !== "missing") {
-        env[`PROBE_${syntax.toUpperCase()}`] =
-          state === "empty" ? "" :
-          state === "unexpanded" ? reference :
-          state === "resolved" ? expected : "unexpected-private-test-value";
-      }
+    if (state !== "missing") {
+      env.PROBE_SECRET =
+        state === "empty" ? "" :
+        state === "unexpanded" ? reference :
+        state === "resolved" ? expected : "unexpected-private-test-value";
     }
     const { result, report } = probe(env);
     assert.equal(report.literalControlMatches, true);
-    for (const check of Object.values(report.checks)) {
-      assert.deepEqual(check, {
-        present: state !== "missing",
-        matchesDummy: state === "resolved",
-        unexpandedReference: state === "unexpanded",
-      });
-    }
-    for (const value of [expected, ...Object.values(references), "unexpected-private-test-value"]) {
+    assert.equal(report.present, state !== "missing");
+    assert.equal(report.matchesDummy, state === "resolved");
+    assert.equal(report.unexpandedReference, state === "unexpanded");
+    for (const value of [expected, reference, "unexpected-private-test-value"]) {
       assert.equal(result.stdout.includes(value), false);
       assert.equal(result.stderr.includes(value), false);
     }
