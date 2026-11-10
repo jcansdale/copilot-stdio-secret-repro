@@ -89,6 +89,12 @@ Do not assume the entry point selected the intended environment.
 
 ## 4. Optional repository-settings stdio control
 
+On the `test/repository-stdio-only` branch, the **Secret Probe** profile is
+removed to prevent delegation to its frontmatter-defined MCP server. Use this
+branch and **Repository Probe** for isolated repository-settings controls on
+both Actions and Cloud. The frontmatter reproduction described above remains
+available on `main`.
+
 This isolates configuration location while keeping the local transport.
 In **Settings > Copilot > MCP servers**, merge the following into the existing
 configuration without removing other servers:
