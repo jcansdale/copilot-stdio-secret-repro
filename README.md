@@ -15,6 +15,8 @@ Node.js 20 or later must already be available.
    Add this dummy secret, not an Actions environment secret:
    - Name: `COPILOT_MCP_DIAGNOSTIC_DUMMY_SECRET`
    - Value: `synthetic-stdio-secret-20261109`
+   For an isolated test, use no custom repository MCP configuration
+   (**Settings > Copilot > MCP servers**: `{"mcpServers":{}}`).
 2. Start a fresh session on `main`, selecting environment **Cloud**,
    mode **Interactive**, and agent **Secret Probe**.
 3. Send:
@@ -47,25 +49,61 @@ A successful call proves MCP startup. A passing literal control plus
 `unexpandedReference: true` identifies the exact reference arriving literally.
 Tool unavailability is a separate failure, not a secret-substitution result.
 
-## Existing live evidence
+## Verified live results: 10 November 2026
 
-Tests on 10 November 2026 used the original three-syntax version, preserved
-[here][original]. The exact tested commit SHAs were not captured.
+Tested `main` at commit `a55d296a1193400a6d65e1600682c6a3ee67d2ca`,
+using **Secret Probe** and the same dummy Agents secret in both environments.
+Repository MCP settings were empty for this pair.
+Cloud session details confirmed environment **Cloud**; the Actions
+[workflow run][actions-run] confirmed the tested commit and agent profile.
+Both sessions called the MCP tool directly without delegation.
 
-| Selected environment | Session | Actual result |
+| Environment | Session | Actual result |
 |---|---|---|
-| Cloud | [Cloud session][cloud-session] | Literal control passed; all three secret references arrived unexpanded |
-| Actions | [Actions session][actions-session] | Literal control passed; all three secret references resolved correctly |
+| Cloud Interactive | [Cloud session][cloud-session] | Literal control passed; secret reference arrived unexpanded |
+| Actions | [Actions session][actions-session] | Literal control passed; secret resolved correctly |
 
-Both used nonce `cloud-frontmatter-20261109-a`; distinct invocation IDs were
-`6ff90c8e-989f-40ef-b76f-4f26f375436d` (Cloud) and
-`6679cdd0-1082-4e2e-b10b-238270919a43` (Actions).
-The generic UI heading said "cloud session" for both; the table records the
-explicit Environment selections.
+Actual Cloud tool response:
 
-**The simplified single-syntax version has not yet been live-tested.**
-Repository-settings experiments are intentionally excluded: they did not
-establish a working stdio workaround.
+```json
+{
+  "marker": "stdio-secret-probe-v2",
+  "nonce": "cloud-v2-clean-20261110-a",
+  "invocationId": "22713808-b47f-4427-a27e-12fec99b45c2",
+  "literalControlMatches": true,
+  "present": true,
+  "matchesDummy": false,
+  "unexpandedReference": true
+}
+```
+
+Actual Actions tool response:
+
+```json
+{
+  "marker": "stdio-secret-probe-v2",
+  "nonce": "actions-v2-clean-20261110-a",
+  "invocationId": "82d6e661-a193-49ec-b89e-d72327fb9833",
+  "literalControlMatches": true,
+  "present": true,
+  "matchesDummy": true,
+  "unexpandedReference": false
+}
+```
+
+### Test isolation
+
+An [initial Cloud attempt][initial-cloud] with a leftover repository-settings
+server also named `secret-probe` failed before tool discovery
+(`mcp.server.failed`). Its [Actions control][initial-actions] passed.
+With approval, we removed only that dummy repository entry, left the Agents
+secret unchanged, and ran the clean pair above at the same commit.
+This does not establish why the earlier startup failed.
+
+The [original three-syntax reproduction][original] also showed literal
+references on Cloud and successful substitution on Actions. Repository-settings
+experiments did not establish a working stdio workaround and are not part of
+this minimal reproduction.
 
 ## Documented expectation
 
@@ -82,6 +120,9 @@ input, and non-disclosure of environment values. They simulate secret delivery;
 they do not prove platform injection.
 
 [original]: https://github.com/jcansdale/copilot-stdio-secret-repro/tree/2cb1740e434504154eb22939ba415285ddcf43cb
-[cloud-session]: https://github.com/jcansdale/copilot-stdio-secret-repro/tasks/9ecf79d8-ab04-4720-a3d1-5c7cd82983e9
-[actions-session]: https://github.com/jcansdale/copilot-stdio-secret-repro/tasks/6367d07f-6efd-4b5f-a56c-946ee33ba4cf
+[cloud-session]: https://github.com/jcansdale/copilot-stdio-secret-repro/tasks/67971072-237d-4251-b986-16961f409e6a
+[actions-session]: https://github.com/jcansdale/copilot-stdio-secret-repro/tasks/5974db7b-3c92-4ed7-927a-79572ab8d6d8
+[actions-run]: https://github.com/jcansdale/copilot-stdio-secret-repro/actions/runs/42803472283
+[initial-cloud]: https://github.com/jcansdale/copilot-stdio-secret-repro/tasks/32e5ac2f-6966-449c-92ef-fdf05ddcaa09
+[initial-actions]: https://github.com/jcansdale/copilot-stdio-secret-repro/tasks/336b1052-4aa0-4079-a6a7-cbbb89ac10a7
 [docs]: https://docs.github.com/en/copilot/reference/custom-agents-configuration#mcp-server-configuration-details
