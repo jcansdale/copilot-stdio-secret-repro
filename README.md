@@ -133,13 +133,64 @@ Local tests cover MCP initialization, tool discovery/calls, literal controls,
 missing/empty/unexpanded/unexpected/resolved values, and invalid input. They
 simulate environment values and **do not prove platform secret injection**.
 
-No live Cloud or Actions results have been recorded for this standalone repo.
+### Live results: 10 November 2026
 
-| Environment | Configuration | Session / commit | Actual tool result |
+The following actual MCP tool responses were captured using **Secret Probe**,
+first with **Cloud** selected in the Environment selector, then with **Actions**
+selected. Both runs passed the literal environment control. All three secret
+reference syntaxes arrived unexpanded on Cloud and resolved to the expected dummy
+value on Actions.
+
+| Selected environment | Configuration | Invocation ID | Actual tool result |
 |---|---|---|---|
-| Cloud Interactive | Custom-agent stdio | Not run | Not established |
-| Actions | Same custom-agent stdio | Not run | Not established |
-| Cloud Interactive | Repository-settings stdio | Not run | Not established |
+| Cloud | Custom-agent stdio | `6ff90c8e-989f-40ef-b76f-4f26f375436d` | Startup and literal control passed; all three secret references arrived literally |
+| Actions | Same custom-agent stdio | `6679cdd0-1082-4e2e-b10b-238270919a43` | Startup and literal control passed; all three secret references resolved correctly |
+| Cloud | Repository-settings stdio | Not run | Not established |
+
+Both runs reused the nonce `cloud-frontmatter-20261109-a`; the nonce is only a
+caller-supplied correlation label, not an execution-environment selector or test
+date. The distinct invocation IDs identify the separate tool calls.
+
+The session UI displayed "started a cloud session" for both runs. The environment
+labels above record the tester's explicit **Cloud** and **Actions** selections,
+not that generic heading. Session URLs, tested commit SHAs, and backing runner
+metadata have not yet been recorded here.
+
+#### Cloud response
+
+```json
+{
+  "marker": "stdio-secret-probe-v1",
+  "nonce": "cloud-frontmatter-20261109-a",
+  "invocationId": "6ff90c8e-989f-40ef-b76f-4f26f375436d",
+  "literalControlMatches": true,
+  "checks": {
+    "actions": { "present": true, "matchesDummy": false, "unexpandedReference": true },
+    "dollar": { "present": true, "matchesDummy": false, "unexpandedReference": true },
+    "braced": { "present": true, "matchesDummy": false, "unexpandedReference": true }
+  }
+}
+```
+
+#### Actions response
+
+```json
+{
+  "marker": "stdio-secret-probe-v1",
+  "nonce": "cloud-frontmatter-20261109-a",
+  "invocationId": "6679cdd0-1082-4e2e-b10b-238270919a43",
+  "literalControlMatches": true,
+  "checks": {
+    "actions": { "present": true, "matchesDummy": true, "unexpandedReference": false },
+    "dollar": { "present": true, "matchesDummy": true, "unexpandedReference": false },
+    "braced": { "present": true, "matchesDummy": true, "unexpandedReference": false }
+  }
+}
+```
+
+These results reproduce an environment-dependent secret-substitution failure for
+custom-agent local/stdio MCP configuration. They do not establish the root cause,
+whether repository-settings stdio configuration is affected, or a fix timeline.
 
 [custom-agent-secrets]: https://docs.github.com/en/copilot/reference/custom-agents-configuration#mcp-server-environment-variables-and-secrets
 [server-type]: https://docs.github.com/en/copilot/reference/custom-agents-configuration#mcp-server-type
