@@ -198,6 +198,31 @@ These results reproduce an environment-dependent secret-substitution failure for
 custom-agent local/stdio MCP configuration. They do not establish the root cause,
 whether repository-settings stdio configuration is affected, or a fix timeline.
 
+### Repository-settings control follow-up
+
+- [Cloud / Repository Probe session](https://github.com/jcansdale/copilot-stdio-secret-repro/tasks/ac290e7a-6814-443f-918c-014402025537):
+  the requested tool was unavailable. No secret-delivery result was obtained.
+- [Initial Actions control](https://github.com/jcansdale/copilot-stdio-secret-repro/tasks/ec6b7258-0c47-42f9-b2a9-4434995d67fc):
+  delegated to Secret Probe, whose frontmatter defines its own MCP server. All
+  three checks passed, including the Actions-syntax check that should be absent
+  from the repository-only control. This is not a clean repository-settings
+  result.
+- [No-delegation Actions control](https://github.com/jcansdale/copilot-stdio-secret-repro/tasks/2fd662ae-0ded-441a-ab87-2ddaef75e951),
+  [workflow run](https://github.com/jcansdale/copilot-stdio-secret-repro/actions/runs/42801536474):
+  selected branch `test/repository-stdio-only`, commit
+  `30e6c5e241c401aa18d34bf719cc01c6f546cb51`. The agent reported that
+  `secret-probe/probe` was unavailable in its direct tools and did not delegate.
+  The workflow completed successfully, but no probe invocation occurred.
+
+The last run's logs identify the Repository Probe profile as loaded from
+`2cb1740e434504154eb22939ba415285ddcf43cb` (the main-branch revision), and still
+list Secret Probe among available agents despite its removal on the selected
+test branch. Branch selection therefore did not isolate agent-profile discovery
+in this run; the explicit no-delegation prompt prevented the earlier fallback.
+The repository MCP configuration was present in the workflow input, but the
+inspected logs did not establish why its tool was unavailable. Neither
+repository-settings control establishes secret substitution behavior.
+
 [custom-agent-secrets]: https://docs.github.com/en/copilot/reference/custom-agents-configuration#mcp-server-environment-variables-and-secrets
 [server-type]: https://docs.github.com/en/copilot/reference/custom-agents-configuration#mcp-server-type
 [cloud-secrets]: https://docs.github.com/en/copilot/how-tos/copilot-on-github/customize-copilot/customize-cloud-agent/configure-secrets-and-variables#using-secrets-and-variables
