@@ -2,7 +2,11 @@ import { randomUUID } from "node:crypto";
 import { createInterface } from "node:readline";
 
 const expected = "synthetic-stdio-secret-20261109";
-const reference = "${{ secrets.COPILOT_MCP_DIAGNOSTIC_DUMMY_SECRET }}";
+const references = [
+  "${{ secrets.COPILOT_MCP_DIAGNOSTIC_DUMMY_SECRET }}",
+  "$SANDBOX_STDIO_DIAGNOSTIC_DUMMY_SECRET",
+  "${SANDBOX_STDIO_DIAGNOSTIC_DUMMY_SECRET}",
+];
 const tool = {
   name: "probe",
   description: "Report boolean-only dummy secret delivery checks; never return environment values.",
@@ -52,7 +56,7 @@ function handle(request) {
               literalControlMatches: process.env.PROBE_LITERAL === "literal-control",
               present: value !== undefined,
               matchesDummy: value === expected,
-              unexpandedReference: value === reference,
+              unexpandedReference: references.includes(value),
             }),
           }],
         },

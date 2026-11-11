@@ -78,6 +78,19 @@ test("missing literal control is distinguishable from a passing control", () => 
   assert.equal(probe({}).report.literalControlMatches, false);
 });
 
+for (const value of [
+  "$SANDBOX_STDIO_DIAGNOSTIC_DUMMY_SECRET",
+  "${SANDBOX_STDIO_DIAGNOSTIC_DUMMY_SECRET}",
+]) {
+  test(`recognizes unexpanded sandbox reference ${value}`, () => {
+    const { result, report } = probe({ PROBE_SECRET: value });
+    assert.equal(report.present, true);
+    assert.equal(report.matchesDummy, false);
+    assert.equal(report.unexpandedReference, true);
+    assert.equal(result.stdout.includes(value), false);
+  });
+}
+
 test("invalid arguments, unknown tools and unknown methods return errors", () => {
   for (const params of [
     { name: "other", arguments: { nonce: "x" } },
