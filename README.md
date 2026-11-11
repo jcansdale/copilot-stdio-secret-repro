@@ -58,6 +58,53 @@ syntax.
 `npm test` checks the MCP protocol and result classification with simulated
 environment values. It doesn't exercise platform secret injection.
 
+## Verified Cloud workaround: unprefixed sandbox secret
+
+On 11 November 2026, a fresh **Cloud** session on branch
+`test/unprefixed-sandbox-secret`, at commit `7068f03`, successfully delivered an
+unprefixed Agents secret to the custom agent's local/stdio MCP process.
+The original reproduction on `main` is unchanged.
+
+1. Create Agents secret `SANDBOX_STDIO_DIAGNOSTIC_DUMMY_SECRET` with the same
+   synthetic dummy value used above.
+2. Leave repository-settings MCP configuration empty. In particular, do not
+   reserve this secret for a repository-settings MCP server.
+3. Use the branch's `secret-probe.agent.md` configuration:
+
+   ```yaml
+   env:
+     PROBE_LITERAL: "literal-control"
+     PROBE_SECRET: "$SANDBOX_STDIO_DIAGNOSTIC_DUMMY_SECRET"
+   ```
+
+4. Start a new session using environment **Cloud**, this branch, and agent
+   **Secret Probe**. Call the probe with nonce `cloud-unprefixed-20261111-b`.
+
+The [actual MCP tool output][cloud-unprefixed] was:
+
+```json
+{
+  "marker": "stdio-secret-probe-v2",
+  "nonce": "cloud-unprefixed-20261111-b",
+  "invocationId": "51348171-7f38-4de8-8821-92b6cf5bd97a",
+  "literalControlMatches": true,
+  "present": true,
+  "matchesDummy": true,
+  "unexpandedReference": false
+}
+```
+
+The tool call required approval in the Cloud UI. Its expanded tool-output panel
+was inspected, not just the agent's final answer. All 11 local tests also passed.
+An earlier CLI launch selected Actions despite the requested sandbox option;
+that workflow was cancelled and is not evidence for this Cloud result.
+
+This works through runtime environment delivery, not `${{ secrets.NAME }}`
+resolution. The secret is therefore accessible to sandbox code, not isolated to
+the MCP server. Use narrowly scoped credentials. This verifies the current staff
+account's Cloud deployment, not availability for every customer or rollout.
+
 [docs]: https://docs.github.com/en/copilot/reference/custom-agents-configuration#mcp-server-environment-variables-and-secrets
 [cloud]: https://github.com/jcansdale/copilot-stdio-secret-repro/tasks/67971072-237d-4251-b986-16961f409e6a
 [actions]: https://github.com/jcansdale/copilot-stdio-secret-repro/tasks/5974db7b-3c92-4ed7-927a-79572ab8d6d8
+[cloud-unprefixed]: https://github.com/jcansdale/copilot-stdio-secret-repro/tasks/91daa352-c89b-46be-851e-b7f7362b1689
