@@ -10,7 +10,7 @@ mcp-servers:
     tools: ["probe"]
     env:
       PROBE_LITERAL: "literal-control"
-      PROBE_SECRET: "${{ secrets.COPILOT_MCP_DIAGNOSTIC_DUMMY_SECRET }}"
+      PROBE_SECRET: "$SANDBOX_STDIO_DIAGNOSTIC_DUMMY_SECRET"
 ---
 
 Call secret-probe/probe once with the nonce supplied by the user. Return the
